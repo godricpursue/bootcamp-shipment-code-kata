@@ -15,14 +15,14 @@ public class Basket {
         }
 
         Map<ShipmentSize, Integer> shipmentSizeCounts = new HashMap<>();
-        ShipmentSize largestSize = null;
+        ShipmentSize largestBasketSize = null;
 
         for (Product product : products) {
-            ShipmentSize size = product.getSize();
-            shipmentSizeCounts.put(size, shipmentSizeCounts.getOrDefault(size, 0) + 1);
+            ShipmentSize productSize = product.getSize();
+            shipmentSizeCounts.put(productSize, shipmentSizeCounts.getOrDefault(productSize, 0) + 1);
 
-            if (largestSize == null || size.compareTo(largestSize) > 0) {
-                largestSize = size;
+            if (largestBasketSize == null || productSize.compareTo(largestBasketSize) > 0) {
+                largestBasketSize = productSize;
             }
         }
 
@@ -32,7 +32,7 @@ public class Basket {
             ShipmentSize maxCountSize = maxEntry.getKey();
             return getNextSize(maxCountSize);
         } else {
-            return largestSize;
+            return largestBasketSize;
         }
     }
 
@@ -45,10 +45,10 @@ public class Basket {
         return false;
     }
 
-    private ShipmentSize getNextSize(ShipmentSize size) {
-        if (size == ShipmentSize.SMALL) {
+    private ShipmentSize getNextSize(ShipmentSize productSize) {
+        if (productSize == ShipmentSize.SMALL) {
             return ShipmentSize.MEDIUM;
-        } else if (size == ShipmentSize.MEDIUM) {
+        } else if (productSize == ShipmentSize.MEDIUM) {
             return ShipmentSize.LARGE;
         } else {
             return ShipmentSize.X_LARGE;
