@@ -1,48 +1,51 @@
 package com.trendyol.shipment;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Basket {
 
-    private List<Product> products;
+    private List<Product> productList;
+    private static final int SHIPMENT_SIZE_THRESHOLD = 3;
 
     public ShipmentSize getShipmentSize() {
+
+        final var products = getProductList();
+
         if (products == null || products.isEmpty()) {
             return null;
         }
 
-        Map<ShipmentSize, Integer> shipmentSizeCounts = new HashMap<>();
-        ShipmentSize largestBasketSize = null;
+        Map<ShipmentSize, Integer> shipmentSizeCounts = products.stream()
+                .collect(Collectors.toMap(
+                        Product::getSize,
+                        count -> 1,
+                        Integer::sum
+                ));
 
-        for (Product product : products) {
-            ShipmentSize productSize = product.getSize();
-            shipmentSizeCounts.put(productSize, shipmentSizeCounts.getOrDefault(productSize, 0) + 1);
+            ShipmentSize largestBasketSize = getLargestBasketSize(products);
 
-            if (largestBasketSize == null || productSize.compareTo(largestBasketSize) > 0) {
-                largestBasketSize = productSize;
-            }
-        }
+        return hasSizeWithCountGreaterThanThreshold(shipmentSizeCounts) ?
+                getNextSize(shipmentSizeCounts.entrySet().stream()
+                        .max(Map.Entry.comparingByValue())
+                        .map(Map.Entry::getKey)
+                        .orElse(null)
+                ) :
+                largestBasketSize;
 
-        if (hasSizeWithCountGreaterThanEqualThree(shipmentSizeCounts)) {
-            Map.Entry<ShipmentSize, Integer> maxEntry = Collections.max(
-                    shipmentSizeCounts.entrySet(), Map.Entry.comparingByValue());
-            ShipmentSize maxCountSize = maxEntry.getKey();
-            return getNextSize(maxCountSize);
-        } else {
-            return largestBasketSize;
-        }
     }
 
-    private boolean hasSizeWithCountGreaterThanEqualThree(Map<ShipmentSize, Integer> shipmentSizeCounts) {
-        for (Integer count : shipmentSizeCounts.values()) {
-            if (count >= 3) {
-                return true;
-            }
-        }
-        return false;
+    private ShipmentSize getLargestBasketSize(List<Product> products) {
+        return products.stream()
+                .map(Product::getSize)
+                .max(ShipmentSize::compareTo)
+                .orElse(null);
+    }
+    private boolean hasSizeWithCountGreaterThanThreshold(Map<ShipmentSize, Integer> shipmentSizeCounts) {
+        return shipmentSizeCounts.values()
+                .stream()
+                .anyMatch(count -> count >= SHIPMENT_SIZE_THRESHOLD);
     }
 
     private ShipmentSize getNextSize(ShipmentSize productSize) {
@@ -55,11 +58,11 @@ public class Basket {
         }
     }
 
-    public List<Product> getProducts() {
-        return products;
+    public List<Product> getProductList() {
+        return productList;
     }
 
-    public void setProducts(List<Product> products) {
-        this.products = products;
+    public void setProducts(List<Product> productList) {
+        this.productList = productList;
     }
 }
